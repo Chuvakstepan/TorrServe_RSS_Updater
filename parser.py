@@ -14,6 +14,8 @@ hosts = [
 # Адрес RSS. Можно использовать RSS для чтения, чтобы подгрузить постеры напрямую из RSS
 url = 'http://litr.cc/rss/d02e7a69357c64210a8aa8d932e1cd64'
 
+# для загрузки постеров на imgur
+imgur_token = ''
 RssText = requests.get(url).text
 print('Дата отправки запроса '+str(datetime.now()))
 print('')
@@ -88,7 +90,25 @@ for host in hosts:
         ind_symbol = Torrent_Guid.rfind('#',1);
         if ind_symbol>=0:
             Torrent_Guid = Torrent_Guid[0:ind_symbol]
-    
+     
+        if len(imgur_token)>0 and len(Torrent_Poster)>0:
+            api = 'https://api.imgur.com/3/image'
+
+            params = dict(
+                client_id=imgur_token
+            )
+
+            files123 = dict(
+                image=(None, Torrent_Poster),
+                name=(None, ''),
+                type=(None, 'URL'),
+            )
+            r_imgur = requests.post(api, files=files123, params=params)
+            if r_imgur.status_code==200:
+                try:
+                    Torrent_Poster = r_imgur.json()['data']['link']    
+                except:()   
+
         print(Torrent_Title) 
         print(Torrent_Link) 
         print(Torrent_Guid)     
