@@ -1,6 +1,5 @@
 from dataclasses import replace
 from datetime import datetime
-import xml.dom.minidom
 import requests
 import json
 import os
@@ -27,33 +26,34 @@ if len(token)>0:
 
 
 def main():
+    global url
+    url = url.replace('/rss/magnet','')
+    url = url.replace('/rss/read','')
+    url = url.replace('/rss','')
+    url = url + '/json'
 
-    RssText = requests.get(url).text
-    #RssText = open(url, 'r').read()
-
+    JsonText = requests.get(url).text
     print('Дата отправки запроса '+str(datetime.now()))
     print('')
 
     otkaz = False
-    pathOldRSS = os.path.basename(sys.argv[0])+'_old.rss'
-    print(pathOldRSS)
+    pathOldJson = os.path.basename(sys.argv[0])+'_old.json'
+    print(pathOldJson)
     try:
-        oldRSS = open(pathOldRSS, 'r').read()
-        if (RssText==oldRSS):
+        old_json = open(pathOldJson, 'r').read()
+        if (JsonText==old_json):
             print('Без изменений. Пропущено')
-            print('Для перезапуска удалите файл '+pathOldRSS)
+            print('Для перезапуска удалите файл '+pathOldJson)
             otkaz = True
     except Exception as e:
-        print('Ошибка открытия RSS '+str(e))
+        print('Ошибка открытия json '+str(e))
        
     if otkaz:
         exit()
 
 
-
-
-    my_file = open(pathOldRSS, 'w')
-    my_file.write(RssText)
+    my_file = open(pathOldJson, 'w')
+    my_file.write(JsonText)
     my_file.close()
 
     for host in hosts:
@@ -73,29 +73,24 @@ def main():
             send_message_bot('Ошибка подключения torserve_parser ' + str(datetime.now()))
             continue   
 
-        doc = xml.dom.minidom.parseString(RssText)
-        torrents = doc.getElementsByTagName('item')
+        doc = json.loads(JsonText)
+
+        torrents = doc.get('items',[])
         for torrent in torrents:
             
             Torrent_Title = ''
             Torrent_Link = '' 
             Torrent_Poster = ''
-            Torrent_Guid = ''       
-            for childTitle in torrent.getElementsByTagName('title'):
-                for childName in childTitle.childNodes:
-                    Torrent_Title = childName.data
-            for childLink in torrent.getElementsByTagName('link'):
-                for childName in childLink.childNodes:
-                    Torrent_Link = childName.data
-            for childGuid in torrent.getElementsByTagName('guid'):
-                for childName in childGuid.childNodes:
-                    Torrent_Hash = childName.data
-            for childGuid in torrent.getElementsByTagName('enclosure'):
-                if childGuid.hasAttribute('url'):
-                    Torrent_Guid = childGuid.getAttribute('url')
-            for childGuid in torrent.getElementsByTagName('media:content'):
-                if childGuid.hasAttribute('url'):
-                    Torrent_Poster = childGuid.getAttribute('url')
+            Torrent_Guid = ''
+            
+            Torrent_Title = torrent.get('title','')
+            Torrent_Poster = torrent.get('image','')
+            Torrent_Hash = torrent.get('id','').lower()
+            Torrent_attachments = torrent.get('attachments',[])
+            if len(Torrent_attachments)>0:
+                Torrent_Guid = Torrent_attachments[0].get('url','')
+            Torrent_Link = 'magnet:?xt=urn:btih:'+Torrent_Hash 
+
                
             if len(imgur_token)>0 and len(Torrent_Poster)>0:
                 api = 'https://api.imgur.com/3/image'
