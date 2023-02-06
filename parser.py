@@ -73,9 +73,13 @@ def main():
             send_message_bot('Ошибка подключения torserve_parser ' + str(datetime.now()))
             continue   
 
-        doc = json.loads(JsonText)
-
-        torrents = doc.get('items',[])
+        try:
+            doc = json.loads(JsonText)
+            torrents = doc.get('items',[])
+        except Exception as e:
+            print('Ошибка разбора json \n'+str(e))
+            torrents = []
+            
         for torrent in torrents:
             
             Torrent_Title = ''
