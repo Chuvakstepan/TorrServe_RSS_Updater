@@ -12,16 +12,16 @@ hosts = [
     'http://192.168.1.83:8090'
     ]
 # Адрес RSS. Можно использовать RSS для чтения, чтобы подгрузить постеры напрямую из RSS
-url = 'https://litr.cc/feed/30fc3a58-9491-48d7-bfbd-5ab4846db2e4/rss'
+url = 'https://litr.cc/feed/15efba36-7b07-4112-ad51-dcf9b8fa5057/rss/magnet'
 # для загрузки постеров на imgur
 imgur_token = ''
 # интеграция в telegram, если не заполнять токен то не отправлять сообщения не будет
 token = ""
 bot = None
 # для отправки в групповой чат (уведомления о новых сериях)
-chat_id_group = [,]
+chat_id_group = [0,]
 # для отправки в личный чат (уведомления о ошибках)
-chat_id_my = [,]
+chat_id_my = [0,]
 if len(token)>0:
     bot = telegram.Bot(token)
 
@@ -75,7 +75,6 @@ def main():
 
         doc = xml.dom.minidom.parseString(RssText)
         torrents = doc.getElementsByTagName('item')
-        torrents_added = []
         for torrent in torrents:
             
             Torrent_Title = ''
@@ -94,24 +93,10 @@ def main():
             for childGuid in torrent.getElementsByTagName('enclosure'):
                 if childGuid.hasAttribute('url'):
                     Torrent_Guid = childGuid.getAttribute('url')
-                    
-
-
-            if (len(Torrent_Link)==0) or (Torrent_Link[0:4]=='http'):
-                #значит это RSS для чтения, находим магнет ссылку и постер в html содержимом
-                desriptionBlock = torrent.getElementsByTagName('description')
-                if len(desriptionBlock)>0 and len(desriptionBlock[0].childNodes)>0:
-                    blockText = desriptionBlock[0].childNodes[0].data
-                    img_tag = 'img src="'
-                    start_img = blockText.find(img_tag)
-                    if start_img>0:
-                        end_img = blockText.find('" alt="',start_img)
-                        Torrent_Poster = blockText[start_img+len(img_tag):end_img]
-                    start_link = blockText.find('magnet:')
-                    if start_link>0:
-                        end_link = blockText.find('&',start_link)
-                        Torrent_Link = blockText[start_link:end_link]
-            
+            for childGuid in torrent.getElementsByTagName('media:content'):
+                if childGuid.hasAttribute('url'):
+                    Torrent_Poster = childGuid.getAttribute('url')
+               
             if len(imgur_token)>0 and len(Torrent_Poster)>0:
                 api = 'https://api.imgur.com/3/image'
 
@@ -263,4 +248,3 @@ def send_message_bot(text, group=False):
     
 if __name__ == '__main__':
     main()
-
