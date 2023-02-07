@@ -79,7 +79,8 @@ def main():
         except Exception as e:
             print('Ошибка разбора json \n'+str(e))
             torrents = []
-            
+
+        loaded_guids = []    
         for torrent in torrents:
             
             Torrent_Title = ''
@@ -90,9 +91,7 @@ def main():
             Torrent_Title = torrent.get('title','')
             Torrent_Poster = torrent.get('image','')
             Torrent_Hash = torrent.get('id','').lower()
-            Torrent_attachments = torrent.get('attachments',[])
-            if len(Torrent_attachments)>0:
-                Torrent_Guid = Torrent_attachments[0].get('url','')
+            Torrent_Guid = torrent.get('external_url','')
             Torrent_Link = 'magnet:?xt=urn:btih:'+Torrent_Hash 
 
                
@@ -113,6 +112,11 @@ def main():
                     try:
                         Torrent_Poster = r_imgur.json()['data']['link']    
                     except:()      
+
+            if Torrent_Guid in loaded_guids:
+                return
+
+            loaded_guids.append(Torrent_Guid)    
 
             print(Torrent_Title) 
             print(Torrent_Guid)
