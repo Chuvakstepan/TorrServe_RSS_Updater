@@ -18,9 +18,9 @@ imgur_token = ''
 token = ""
 bot = None
 # для отправки в групповой чат (уведомления о новых сериях)
-chat_id_group = [0,]
+chat_id_group = []
 # для отправки в личный чат (уведомления о ошибках)
-chat_id_my = [0,]
+chat_id_my = []
 if len(token)>0:
     bot = telegram.Bot(token)
 
@@ -246,7 +246,7 @@ def send_message_bot(text, group=False):
     if bot is None or len(chat_id_array)==0:
         return   
     for i in chat_id_array:
-        bot.send_message(i, text=text, parse_mode="Markdown")
+        bot.send_message(i, text=text)
 
     
 if __name__ == '__main__':
